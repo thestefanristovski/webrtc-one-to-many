@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src='both.js' defer></script>
+    <style>
+        body {
+          background-color: black;
+          padding: 30px; 
+        }
+    
+        #video-grid {
+          display: grid;
+          grid-template-columns: auto auto auto auto auto auto;
+          grid-template-rows: auto auto;
+          grid-auto-flow: row;
+          grid-gap: 30px;
+        }
+    
+        #sec-video-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, 120px);
+          grid-auto-rows: 120px;
+          grid-gap: 20px;
+          margin-top: 30px; 
+        }
+    
+        #client-video{
+          height: 120px;
+          width: 120px;
+          position: fixed;
+          right: 40px;
+          bottom: 90px;
+          padding: 0px;
+          margin: 0px;
+        }
+        
+        
+        video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 16px;
+        }
+        
+        .logo {
+          width: 30px;
+          height: 30px;
+          border-radius: 0px;
+        }
+    
+        #logo-container {
+          position: fixed;
+          bottom: 15px;
+          right: 140px;
+        }
+    
+        #first {
+          grid-column: span 2;
+          grid-row: span 2;
+        }
+    
+        #second {
+          grid-column: span 2;
+          grid-row: span 2;
+        }
+    
+        .footer {
+          position: fixed;
+          left: 0;
+          bottom: 0;
+          width: 100%;
+          background-color: rgba(11,11,11,0.7);
+          backdrop-filter: blur(40px);
+          border-top: 3px solid #FF5C00;
+          color: white;
+          height: 70px;
+          vertical-align: middle;
+          padding-right: 50px;
+          padding-left: 50px;
+        }
+    
+        .footer h1{
+          font-family: sans-serif;
+          font-size: 25px;
+          font-weight: normal;
+          vertical-align: middle;
+          display: inline;
+        }
+    
+        #my-button {
+          background-color: #303030;
+          color: white;
+          border-radius: 12px;
+          padding: 10px;
+          width: 70px;
+          display: inline-block;
+          border:none;
+          margin-left: 40px;
+          font-size: 17px;
+          margin-top: 15px; 
+        }
+    
+        #my-button:hover {
+          background-color: #505050;
+        }
+    
+      </style>
+</head>
+<body>
+    <div id="video-grid">
+        <div id="first">
+            
+        </div>
+        <div id="second">
+          
+        </div>
+      </div>
+      <div id="sec-video-grid">
+      </div>
+      <div id="client-video">
+        <video autoplay id="video"></video>
+      </div>
+      <div class="footer">
+        <h1>Videoconference Test</h1>
+        <button id="my-button">Join</button>
+        <div id="logo-container">
+          <img class="logo" src="logo.png">
+        </div>
+      </div>
+    
+</body>
+</html>
