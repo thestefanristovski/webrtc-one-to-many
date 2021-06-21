@@ -1,11 +1,10 @@
 to run the app
 
-`npm i or yarn`
+`npm install`
 
 then 
 
-`node server.js`
+`node server.js or npm start`
 
-For broadcaster screen: http://localhost:5000/
 
-For viewer screen: http://localhost:5000/viewer.html
+To join: http://localhost:5000/both.html
