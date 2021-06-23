@@ -1,13 +1,21 @@
 const express = require('express');
-const http = require('http');
+const https = require('https');
 const app = express();
+const fs = require('fs');
 
-const server = http.createServer(app);
+const options = {
+    key: fs.readFileSync('server.key'),
+    cert: fs.readFileSync('server.cert')
+};
+
+const server = https.createServer(options, app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
 const bodyParser = require('body-parser');
 const webrtc = require("wrtc");
+
+
 
 let senderStream = [];
 
@@ -104,20 +112,6 @@ function handleTrackEvent(e, peer) {
     if(e.streams[0]!= undefined) {
         senderStream.push(e.streams[0]);
     }
-
-    /*
-    peers.forEach(p => {
-        if(e.streams[0]!= undefined) {
-            e.streams[0].getTracks().forEach(track => {
-                try{
-                    p.onnegotiationneeded = () => console.log("negotiation");
-                    p.addTrack(track, e.streams[0]);
-                } catch (e) {
-                    console.log(e);
-                }
-            })
-        }
-        */
 };
 
 app.post('/bothUpdate', async ({body}, res) => {
@@ -159,6 +153,11 @@ io.on('connection', (socket) => {
         console.log(connections.lastIndexOf(socket));
         socket.broadcast.emit('renegotiation', connections.lastIndexOf(socket));
     });
+    socket.on('disconnect', () => {
+        io.emit('left', connections.lastIndexOf(socket));
+        senderStream.splice(connections.lastIndexOf(socket), 1);
+        connections.splice(connections.lastIndexOf(socket), 1);
+    });
 });
 
-server.listen(5000, () => console.log('server started'));
+server.listen(3001, () => console.log('server started'));
