@@ -18,6 +18,10 @@ async function init() {
     peer.addTransceiver("video");
     peer.addTransceiver("video");
     peer.addTransceiver("video");
+    peer.addTransceiver("video");
+    peer.addTransceiver("video");
+    peer.addTransceiver("video");
+    peer.addTransceiver("video");
     stream.getTracks().forEach(track => peer.addTrack(track, stream));
     socket.emit('joined');
 }
@@ -106,6 +110,9 @@ const secondaryVideo = document.getElementById('second');
 let first = false;
 let second = false;
 
+var snd = new Audio("join.mp3");
+var sndl = new Audio("leave.mp3");
+
 
 function handleTrackEvent(e) {
     const container = document.createElement('div')
@@ -130,6 +137,7 @@ function handleTrackEvent(e) {
         container.append(video);
         videoGrid.append(container);
     }
+
 };
 
 function callMe(e) {
@@ -137,7 +145,7 @@ function callMe(e) {
 }
 
 socket.on('renegotiation', (indexCon) => {
-    console.log("timeout start for");
+    console.log("timeout start for" + indexCon);
     console.log(indexCon);
     //maybe add a timeout to process addition
     setTimeout(function(){ 
@@ -150,10 +158,50 @@ socket.on('renegotiation', (indexCon) => {
         peer.addTransceiver("video");
         peer.addTransceiver("video");
         peer.addTransceiver("video"); 
-        console.log('timeout done')  
+        console.log('timeout done');
     }, 1000);
-    
+    snd.currentTime=0;
+    snd.play();
 });  
+
+socket.on('left', (indexCon) => {
+    console.log('disconnect from ' + indexCon);
+    if(indexCon == 0) {
+        console.log('children');
+        console.log(videoGrid.children);
+        primaryVideo.removeChild(primaryVideo.lastChild);
+        console.log(videoGrid.children);
+        if(secondaryVideo.lastChild != null) {
+            primaryVideo.append(secondaryVideo.lastChild);
+            console.log(videoGrid.children);
+            //secondaryVideo.removeChild(secondaryVideo.lastChild);
+            console.log(videoGrid.children);
+            if(videoGrid.children[2] != null) {
+                secondaryVideo.append(videoGrid.children[2]);
+                //videoGrid.removeChild(videoGrid.children[2]);
+            } else {
+                second = false;
+            }
+        } else {
+            first = false;
+        }
+    } else if (indexCon == 1) {
+        secondaryVideo.removeChild(secondaryVideo.lastChild)
+        if(videoGrid.children[2] != null) {
+            console.log("trying to append and remove")
+            console.log(videoGrid.children[2]);
+            secondaryVideo.append(videoGrid.children[2]);
+            //THIS LINE PROBLEMATIC
+            //videoGrid.removeChild(videoGrid.children[2]);
+        } else {
+            second = false;
+        }
+    } else {
+        videoGrid.removeChild(videoGrid.children[indexCon]);
+    }
+    sndl.currentTime=0;
+    sndl.play();
+});
 
 //IMPORTANT
 //https://stackoverflow.com/questions/38279635/webrtc-remotevideo-stream-not-working
