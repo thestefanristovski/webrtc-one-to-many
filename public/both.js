@@ -6,6 +6,20 @@ window.onload = () => {
     }
 }
 
+function success() {};
+function failure(e) { console.log(e); };
+
+const videoGrid = document.getElementById('video-grid');
+const primaryVideo = document.getElementById('first');
+const secondaryVideo = document.getElementById('second');
+let first = false;
+let second = false;
+
+var snd = new Audio("join.mp3");
+var sndl = new Audio("leave.mp3");
+
+var streams = [];
+
 
 async function init() {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -54,22 +68,27 @@ function createPeerUpdate(streamId) {
 }
 
 function onNewTrack(e) {
-    const video = document.createElement('video');
-    console.log(e);
-    video.srcObject = e.streams[0];
 
-    video.addEventListener('loadedmetadata', () => {
-        video.play()
-    })
+    if(!streams.includes(e.streams[0].id)) {
+        streams.push(e.streams[0].id);
 
-    if(!first) {
-        first = true;
-        primaryVideo.append(video);
-    } else if (!second) {
-        second = true;
-        secondaryVideo.append(video);
-    } else {
-        videoGrid.append(video);
+        const video = document.createElement('video');
+        console.log(e);
+        video.srcObject = e.streams[0];
+
+        video.addEventListener('loadedmetadata', () => {
+            video.play()
+        })
+
+        if(!first) {
+            first = true;
+            primaryVideo.append(video);
+        } else if (!second) {
+            second = true;
+            secondaryVideo.append(video);
+        } else {
+            videoGrid.append(video);
+        }
     }
 }
 
@@ -101,35 +120,11 @@ async function handleNegotiationNeededEventUpdate(peer, streamId) {
     peer.setRemoteDescription(desc).catch(e => console.log(e));
 }
 
-function success() {};
-function failure(e) { console.log(e); };
-
-const videoGrid = document.getElementById('video-grid');
-const primaryVideo = document.getElementById('first');
-const secondaryVideo = document.getElementById('second');
-let first = false;
-let second = false;
-
-var snd = new Audio("join.mp3");
-var sndl = new Audio("leave.mp3");
-
-
 function handleTrackEvent(e) {
 
-    var isAdded = false;
-    if(e.streams[0].id == primaryVideo.lastChild.srcObject.id) {
-        isAdded = true;
-    } else if (e.streams[0].id == secondaryVideo.lastChild.srcObject.id) {
-        isAdded = true; 
-    } else {
-        for (let i = 2; i < videoGrid.children.length; i++) {
-            if (videoGrid.children[i].srcObject.id == e.streams[0].id) {
-                isAdded = true;
-            }
-        }
-    }
-
-    if(!isAdded) {
+    if(!streams.includes(e.streams[0].id)) {
+        console.log("IM IN");
+        streams.push(e.streams[0].id);
         const container = document.createElement('div')
         container.className = 'video-div';
         const video = document.createElement('video');
@@ -153,6 +148,23 @@ function handleTrackEvent(e) {
             videoGrid.append(container);
         }
     }
+
+    /*
+    var isAdded = false;
+    if(e.streams[0].id == primaryVideo.lastChild.srcObject.id) {
+        isAdded = true;
+    } else if (e.streams[0].id == secondaryVideo.lastChild.srcObject.id) {
+        isAdded = true; 
+    } else {
+        for (let i = 2; i < videoGrid.children.length; i++) {
+            if (videoGrid.children[i].srcObject.id == e.streams[0].id) {
+                isAdded = true;
+            }
+        }
+    }
+    */
+
+    
 };
 
 function callMe(e) {
