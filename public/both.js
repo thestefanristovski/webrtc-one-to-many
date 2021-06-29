@@ -7,9 +7,6 @@ window.onload = () => {
 }
 
 
-//const OGpeer;
-
-
 async function init() {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     document.getElementById("video").srcObject = stream;
@@ -23,7 +20,8 @@ async function init() {
     peer.addTransceiver("video");
     peer.addTransceiver("video");
     stream.getTracks().forEach(track => peer.addTrack(track, stream));
-    socket.emit('joined');
+    userId = stream.id;
+    socket.emit('joined', stream.id);
 }
 
 
@@ -41,7 +39,7 @@ function createPeer() {
     return peer;
 }
 
-function createPeerUpdate() {
+function createPeerUpdate(streamId) {
     const peer = new RTCPeerConnection({
         iceServers: [
             {
@@ -50,7 +48,7 @@ function createPeerUpdate() {
         ]
     });
     peer.ontrack = onNewTrack;
-    peer.onnegotiationneeded = () => handleNegotiationNeededEventUpdate(peer);
+    peer.onnegotiationneeded = () => handleNegotiationNeededEventUpdate(peer, streamId);
 
     return peer;
 }
@@ -88,12 +86,14 @@ async function handleNegotiationNeededEvent(peer) {
     peer.setRemoteDescription(desc).catch(e => console.log(e));
 }
 
-async function handleNegotiationNeededEventUpdate(peer) {
+async function handleNegotiationNeededEventUpdate(peer, streamId) {
 
+    console.log("handle Update for: " + streamId);
     const offer = await peer.createOffer();
     await peer.setLocalDescription(offer);
     const payload = {
-        sdp: peer.localDescription
+        sdp: peer.localDescription,
+        stream: streamId
     };
 
     const { data } = await axios.post('/bothUpdate', payload);
@@ -115,41 +115,54 @@ var sndl = new Audio("leave.mp3");
 
 
 function handleTrackEvent(e) {
-    const container = document.createElement('div')
-    container.className = 'video-div';
-    const video = document.createElement('video');
-    console.log(e);
-    video.srcObject = e.streams[0];
 
-    video.addEventListener('loadedmetadata', () => {
-        video.play()
-    })
-
-    if(!first) {
-        first = true;
-        container.append(video);
-        primaryVideo.append(container);
-    } else if (!second) {
-        second = true;
-        container.append(video);
-        secondaryVideo.append(container);
+    var isAdded = false;
+    if(e.streams[0].id == primaryVideo.lastChild.srcObject.id) {
+        isAdded = true;
+    } else if (e.streams[0].id == secondaryVideo.lastChild.srcObject.id) {
+        isAdded = true; 
     } else {
-        container.append(video);
-        videoGrid.append(container);
+        for (let i = 2; i < videoGrid.children.length; i++) {
+            if (videoGrid.children[i].srcObject.id == e.streams[0].id) {
+                isAdded = true;
+            }
+        }
     }
 
+    if(!isAdded) {
+        const container = document.createElement('div')
+        container.className = 'video-div';
+        const video = document.createElement('video');
+        console.log(e);
+        video.srcObject = e.streams[0];
+    
+        video.addEventListener('loadedmetadata', () => {
+            video.play()
+        })
+    
+        if(!first) {
+            first = true;
+            container.append(video);
+            primaryVideo.append(container);
+        } else if (!second) {
+            second = true;
+            container.append(video);
+            secondaryVideo.append(container);
+        } else {
+            container.append(video);
+            videoGrid.append(container);
+        }
+    }
 };
 
 function callMe(e) {
     console.log(e);
 }
 
-socket.on('renegotiation', (indexCon) => {
-    console.log("timeout start for" + indexCon);
-    console.log(indexCon);
+socket.on('renegotiation', (streamId) => {
     //maybe add a timeout to process addition
     setTimeout(function(){ 
-        const peer = createPeerUpdate();
+        const peer = createPeerUpdate(streamId);
         peer.addTransceiver("video");
         peer.addTransceiver("video");
         peer.addTransceiver("video");
@@ -165,17 +178,13 @@ socket.on('renegotiation', (indexCon) => {
 });  
 
 socket.on('left', (indexCon) => {
-    console.log('disconnect from ' + indexCon);
-    if(indexCon == 0) {
-        console.log('children');
-        console.log(videoGrid.children);
+    console.log('disconnect from stream Id: ' + indexCon);
+    
+    if(indexCon == primaryVideo.lastChild.srcObject.id) {
         primaryVideo.removeChild(primaryVideo.lastChild);
-        console.log(videoGrid.children);
         if(secondaryVideo.lastChild != null) {
             primaryVideo.append(secondaryVideo.lastChild);
-            console.log(videoGrid.children);
             //secondaryVideo.removeChild(secondaryVideo.lastChild);
-            console.log(videoGrid.children);
             if(videoGrid.children[2] != null) {
                 secondaryVideo.append(videoGrid.children[2]);
                 //videoGrid.removeChild(videoGrid.children[2]);
@@ -185,20 +194,22 @@ socket.on('left', (indexCon) => {
         } else {
             first = false;
         }
-    } else if (indexCon == 1) {
+    } else if (indexCon == secondaryVideo.lastChild.srcObject.id) {
         secondaryVideo.removeChild(secondaryVideo.lastChild)
         if(videoGrid.children[2] != null) {
-            console.log("trying to append and remove")
-            console.log(videoGrid.children[2]);
             secondaryVideo.append(videoGrid.children[2]);
-            //THIS LINE PROBLEMATIC
             //videoGrid.removeChild(videoGrid.children[2]);
         } else {
             second = false;
         }
     } else {
-        videoGrid.removeChild(videoGrid.children[indexCon]);
+        for (let i = 2; i < videoGrid.children.length; i++) {
+            if (videoGrid.children[i].srcObject.id == indexCon) {
+                videoGrid.removeChild(videoGrid.children[i]);
+            }
+        }
     }
+    
     sndl.currentTime=0;
     sndl.play();
 });

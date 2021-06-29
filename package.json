@@ -1,9 +1,19 @@
 {
   "dependencies": {
     "body-parser": "^1.19.0",
+    "canvas": "^2.8.0",
+    "crel": "^4.2.1",
     "express": "^4.17.1",
+    "image-capture": "^0.4.0",
+    "rtc": "^3.4.0",
+    "rtc-filter-grayscale": "^0.1.0",
     "socket.io": "^4.1.2",
+    "videoproc": "^1.0.0",
     "wrtc": "^0.4.7"
   },
-  "proxy": "http://localhost:5000/"
+  "proxy": "http://localhost:5000/",
+  "devDependencies": {
+    "jsdom": "16.6.0",
+    "jsdom-global": "3.0.2"
+  }
 }
